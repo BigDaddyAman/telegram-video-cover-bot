@@ -6,10 +6,13 @@ from config import DATABASE_PATH
 async def init_db():
     """Create the database and users table if they do not exist."""
     async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute("PRAGMA journal_mode=WAL;")
+
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
+                username TEXT,
                 state TEXT NOT NULL DEFAULT 'idle',
                 video_file_id TEXT,
                 video_caption TEXT,
@@ -39,15 +42,17 @@ async def get_user(user_id: int):
             return await cursor.fetchone()
 
 
-async def create_user(user_id: int):
-    """Create a user if they do not already exist."""
+async def create_user(user_id: int, username: str | None = None):
+    """Create a user or update their current username."""
     async with aiosqlite.connect(DATABASE_PATH) as db:
         await db.execute(
             """
-            INSERT OR IGNORE INTO users (user_id)
-            VALUES (?)
+            INSERT INTO users (user_id, username)
+            VALUES (?, ?)
+            ON CONFLICT(user_id)
+            DO UPDATE SET username = excluded.username
             """,
-            (user_id,),
+            (user_id, username),
         )
 
         await db.commit()

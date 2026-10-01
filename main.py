@@ -82,8 +82,9 @@ def restore_caption_entities(data):
 @dp.message(Command("start"))
 async def start(message: Message):
     user_id = message.from_user.id
+    username = message.from_user.username
 
-    await create_user(user_id)
+    await create_user(user_id, username)
 
     await message.answer(
         "👋 Welcome!\n\n"
@@ -95,9 +96,10 @@ async def start(message: Message):
 @dp.message(F.video)
 async def handle_video(message: Message):
     user_id = message.from_user.id
+    username = message.from_user.username
     video = message.video
 
-    await create_user(user_id)
+    await create_user(user_id, username)
 
     caption_entities = serialize_caption_entities(message)
 
@@ -119,12 +121,11 @@ async def handle_video(message: Message):
 @dp.message(F.photo)
 async def handle_photo(message: Message):
     user_id = message.from_user.id
+    username = message.from_user.username
+
+    await create_user(user_id, username)
 
     user = await get_user(user_id)
-
-    if not user:
-        await create_user(user_id)
-        user = await get_user(user_id)
 
     if user["state"] != "waiting_for_image":
         await message.answer(
