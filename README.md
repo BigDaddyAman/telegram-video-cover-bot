@@ -57,6 +57,16 @@ You can test a deployed version before setting up your own bot:
 
 **Test Bot:** [@VideoCoverToolBot](https://t.me/VideoCoverToolBot)
 
+## 🤝 Contributions & Feedback
+
+Found a bug while using the bot, have an idea, or want to contribute?
+
+Check out [CONTRIBUTING.md](CONTRIBUTING.md) for bug reports, feature suggestions, and pull request guidelines.
+
+All feedback is welcome, whether you're using the public test bot or hosting your own instance!
+
+Thanks for helping improve the project! ❤️
+
 ## 🚀 Run Locally
 
 ### Requirements

@@ -29,55 +29,26 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
+
 def serialize_caption_entities(message: Message):
-    """Convert Telegram caption entities into JSON."""
     if not message.caption_entities:
         return None
 
-    entities = []
-
-    for entity in message.caption_entities:
-        data = {
-            "offset": entity.offset,
-            "length": entity.length,
-            "type": entity.type,
-            "user": None,
-        }
-
-        if entity.type == "text_mention" and entity.user:
-            data["user"] = entity.user.model_dump()
-
-        entities.append(data)
-
-    return json.dumps(entities)
-
+    return json.dumps([
+        entity.model_dump(mode="json", exclude_none=True)
+        for entity in message.caption_entities
+    ])
 
 def restore_caption_entities(data):
-    """Convert stored JSON caption entities back to aiogram objects."""
     if not data:
         return None
 
     entities = json.loads(data)
 
-    result = []
-
-    for entity in entities:
-        user = None
-
-        if entity.get("user"):
-            user = User.model_validate(entity["user"])
-
-        result.append(
-            MessageEntity(
-                type=entity["type"],
-                offset=entity["offset"],
-                length=entity["length"],
-                user=user,
-            )
-        )
-
-    return result
-
+    return [
+        MessageEntity.model_validate(entity)
+        for entity in entities
+    ]
 
 @dp.message(Command("start"))
 async def start(message: Message):
