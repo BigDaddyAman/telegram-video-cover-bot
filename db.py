@@ -3,6 +3,9 @@ import aiosqlite
 from config import DATABASE_PATH
 
 
+_UNSET = object()
+
+
 async def init_db():
     """Create the database and users table if they do not exist."""
     async with aiosqlite.connect(DATABASE_PATH) as db:
@@ -61,38 +64,38 @@ async def create_user(user_id: int, username: str | None = None):
 async def update_user(
     user_id: int,
     *,
-    state=None,
-    video_file_id=None,
-    video_caption=None,
-    caption_entities=None,
-    image_file_id=None,
-    has_spoiler=None,
+    state=_UNSET,
+    video_file_id=_UNSET,
+    video_caption=_UNSET,
+    caption_entities=_UNSET,
+    image_file_id=_UNSET,
+    has_spoiler=_UNSET,
 ):
     """Update user data."""
     fields = []
     values = []
 
-    if state is not None:
+    if state is not _UNSET:
         fields.append("state = ?")
         values.append(state)
 
-    if video_file_id is not None:
+    if video_file_id is not _UNSET:
         fields.append("video_file_id = ?")
         values.append(video_file_id)
 
-    if video_caption is not None:
+    if video_caption is not _UNSET:
         fields.append("video_caption = ?")
         values.append(video_caption)
 
-    if caption_entities is not None:
+    if caption_entities is not _UNSET:
         fields.append("caption_entities = ?")
         values.append(caption_entities)
 
-    if image_file_id is not None:
+    if image_file_id is not _UNSET:
         fields.append("image_file_id = ?")
         values.append(image_file_id)
 
-    if has_spoiler is not None:
+    if has_spoiler is not _UNSET:
         fields.append("has_spoiler = ?")
         values.append(int(has_spoiler))
 
@@ -110,7 +113,6 @@ async def update_user(
     async with aiosqlite.connect(DATABASE_PATH) as db:
         await db.execute(query, values)
         await db.commit()
-
 
 async def reset_user(user_id: int):
     """Reset a user's temporary video and cover data."""

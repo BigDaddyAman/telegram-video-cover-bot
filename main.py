@@ -5,7 +5,7 @@ import logging
 from aiogram import Bot, Dispatcher, F
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
-from aiogram.types import Message, MessageEntity, User
+from aiogram.types import Message, MessageEntity
 
 from config import BOT_TOKEN
 from db import (
@@ -63,6 +63,31 @@ async def start(message: Message):
         "to use as its cover."
     )
 
+def validate_caption_entities(caption, entities):
+    if not caption or not entities:
+        return None
+
+    caption_length = len(caption.encode("utf-16-le")) // 2
+    valid_entities = []
+
+    for entity in entities:
+        start = entity.offset
+        end = start + entity.length
+
+        if start < 0 or entity.length <= 0 or end > caption_length:
+            logger.warning(
+                "Skipping invalid caption entity: "
+                "type=%s offset=%s length=%s caption_length=%s",
+                entity.type,
+                start,
+                entity.length,
+                caption_length,
+            )
+            continue
+
+        valid_entities.append(entity)
+
+    return valid_entities or None
 
 @dp.message(F.video)
 async def handle_video(message: Message):
@@ -81,6 +106,7 @@ async def handle_video(message: Message):
         video_caption=message.caption,
         caption_entities=caption_entities,
         image_file_id=None,
+        has_spoiler=bool(message.has_media_spoiler),
     )
 
     await message.answer(
@@ -128,6 +154,11 @@ async def handle_photo(message: Message):
             user["caption_entities"]
         )
 
+        entities = validate_caption_entities(
+            user["video_caption"],
+            entities,
+        )
+
         await bot.send_video(
             chat_id=message.chat.id,
             video=user["video_file_id"],
@@ -142,15 +173,13 @@ async def handle_photo(message: Message):
             "✅ Done! Your video has been sent with the new cover."
         )
 
-    except TelegramAPIError as e:
+    except TelegramAPIError:
         logger.exception("Failed to send video")
 
         await message.answer(
             "❌ Sorry, I couldn't send the video with that cover.\n"
             "Please try again."
         )
-
-        logger.error(f"Telegram API error: {e}")
 
     finally:
         await reset_user(user_id)
